@@ -1,6 +1,19 @@
 #!/bin/bash
 
-source /usr/sbin/sh1mmer_gui.sh
+# from wax/payloads/sh1mmer_bw/root/noarch/usr/sbin/sh1mmer_gui.sh
+# legacy doesn't have this, so we can't source it directly
+function setup() {
+	stty -echo # turn off showing of input
+	printf "\033[?25l" # turn off cursor so that it doesn't make holes in the image
+	printf "\033[2J\033[H" # clear screen
+	sleep 0.1
+}
+
+function cleanup() {
+	printf "\033[2J\033[H" # clear screen
+	printf "\033[?25h" # turn on cursor
+	stty echo
+}
 
 cleanup
 
@@ -45,7 +58,7 @@ opposite_num() {
 clear
 
 echo "Found the following recovery images:"
-ls -lh /usr/local/recovery_images
+ls -lh /usr/local/recovery_images/*.bin
 echo
 echo "Starting recovery in 5 seconds..."
 sleep 5
@@ -58,9 +71,9 @@ echo "2) Exit"
 
 read -p " > " choice
 
-reco_from_bin() {
+recover_from_image() {
     echo "Choose a recovery image:"
-    ls /usr/local/recovery_images
+    ls /usr/local/recovery_images/*.bin
     image=$(choose_image)
     if [ -f "/usr/local/recovery_images/$image" ]; then
         echo "Finding target partitions..."
@@ -105,8 +118,6 @@ reco_from_bin() {
         cgpt add "$dst" -i 4 -P 0
         cgpt add "$dst" -i 2 -P 0
         cgpt add "$dst" -i "$tgt_kern" -P 1
-        echo "Double-checking defog..."
-        defog
         vpd -i RW_VPD -s check_enrollment=0
         echo "Done!"
         read "Press enter to reboot into the new install..."
@@ -119,7 +130,7 @@ reco_from_bin() {
 
 case $choice in
     1)
-      reco_from_bin
+      recover_from_image
       ;;
     2) 
       echo "Bye!"
