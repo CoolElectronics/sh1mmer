@@ -47,40 +47,14 @@ clear
 echo "Found the following recovery images:"
 ls -lh /usr/local/recovery_images
 echo
-echo "Starting SMUT in 5 seconds..."
+echo "Starting recovery in 5 seconds..."
 sleep 5
 
 clear
 
-# ascii art logo
-
-cat << EOF
-  _________.__    ____                                  
- /   _____/|  |__/_   | _____   _____   ___________     
- \_____  \ |  |  \|   |/     \ /     \_/ __ \_  __ \    
- /        \|   Y  \   |  Y Y  \  Y Y  \  ___/|  | \/    
-/_______  /|___|  /___|__|_|  /__|_|  /\___  >__|       
-        \/      \/          \/      \/     \/           
-   _____        .__   __  ._____.                  __   
-  /     \  __ __|  |_/  |_|__\_ |__   ____   _____/  |_ 
- /  \ /  \|  |  \  |\   __\  || __ \ /  _ \ /  _ \   __\\
-/    Y    \  |  /  |_|  | |  || \_\ (  <_> |  <_> )  |  
-\____|__  /____/|____/__| |__||___  /\____/ \____/|__|  
-        \/                        \/                    
-     ____ ______________.__.__  .__  __                     
-    |    |   \__    ___/|__|  | |__|/  |_ ___.__.           
-    |    |   / |    |   |  |  | |  \   __<   |  |           
-    |    |  /  |    |   |  |  |_|  ||  |  \___  |           
-    |______/   |____|   |__|____/__||__|  / ____|           
-                                          \/            
-                       or
-                   SMUT v1.3
-
-Select a utility to run:
- 1) Install fakemurk/murkmod recovery image to unused partition
- 2) Exit
-
-EOF
+echo "Select a utility to run:"
+echo "1) Flash recovery image to unused partition"
+echo "2) Exit"
 
 read -p " > " choice
 
