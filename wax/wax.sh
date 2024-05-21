@@ -101,9 +101,9 @@ patch_sh1mmer() {
 	fi
  
 	if [ -d ./recovery_images ]; then
-		log_info "Copying SMUT recovery images... increase sh1mmer part size if this fails"
+		log_info "Copying recovery images... increase sh1mmer part size if this fails"
 		mkdir -p $MNT_ARCH/recovery_images
-		cp -rv recovery_images/* $MNT_ARCH/recovery_images/
+		cp -rv recovery_images/*.bin $MNT_ARCH/recovery_images/
   	fi
 
 	umount "$MNT_SH1MMER"
