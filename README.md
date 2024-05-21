@@ -37,6 +37,17 @@ If it's not, good luck. You'll have to try and call up your OEM and demand the f
 
 ***
 
+### Adding recovery images
+Download recovery images from [chrome100.dev](https://chrome100.dev) for your board.
+
+You need to unzip them before uploading.
+
+Upload your .bin images to [wax/recovery_images](wax/recovery_images).
+
+You should name them well, as you will need to type out the filename manually later.
+
+Use the recovery payload to flash your recovery image onto your chromebook.
+
 ### Building A Beautiful World Shim
 
 <!--

@@ -99,6 +99,12 @@ patch_sh1mmer() {
 		mkdir -p "$MNT_SH1MMER/chromebrew"
 		pv "$CHROMEBREW" | tar -xzf - --strip-components=1 -C "$MNT_SH1MMER/chromebrew"
 	fi
+ 
+	if [ -n "$RECOVERY_IMAGES_DIR" ]; then
+		log_info "Copying recovery images... this might take a while"
+		mkdir -p "$MNT_SH1MMER/recovery_images"
+		cp "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_SH1MMER/recovery_images"
+  	fi
 
 	umount "$MNT_SH1MMER"
 	rmdir "$MNT_SH1MMER"
@@ -147,6 +153,8 @@ get_flags() {
 	DEFINE_string sh1mmer_part_size "64M" "Partition size for payload(s)" "s"
 
 	DEFINE_string extra_payload_dir "${SCRIPT_DIR}/payloads" "Extra payload dir" "e"
+
+	DEFINE_string recovery_images_dir "${SCRIPT_DIR}/recovery_images" "Recovery images dir" "r"
 
 	DEFINE_string firmware_dir "${SCRIPT_DIR}/firmware" "Insert firmware from dir" ""
 
@@ -218,8 +226,20 @@ if [ -n "$FLAGS_chromebrew" ]; then
 	log_info "Using chromebrew: $CHROMEBREW"
 fi
 
+if [ -n "$FLAGS_recovery_images_dir" ]; then
+	RECOVERY_IMAGES_DIR="$FLAGS_recovery_images_dir"
+	[ -d "$RECOVERY_IMAGES_DIR" ] || fail "$RECOVERY_IMAGES_DIR is not a directory"
+	log_info "Using recovery images: $RECOVERY_IMAGES_DIR"
+fi
+
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
+
+# for recovery images
+if [ -d "$RECOVERY_IMAGES_DIR" ]; then
+	RECOVERY_IMAGES_SIZE=$(du -sb "$RECOVERY_IMAGES_DIR" | awk '{print $1}')
+	SH1MMER_PART_SIZE=$((SH1MMER_PART_SIZE + RECOVERY_IMAGES_SIZE))
+fi
 
 # sane backup table
 suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
