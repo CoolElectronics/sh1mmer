@@ -45,7 +45,7 @@ opposite_num() {
 clear
 
 echo "Found the following recovery images:"
-ls -lh /usr/local/recovery-images
+ls -lh /usr/local/recovery_images
 echo
 echo "Starting SMUT in 5 seconds..."
 sleep 5
@@ -86,9 +86,9 @@ read -p " > " choice
 
 reco_from_bin() {
     echo "Choose a recovery image:"
-    ls /usr/local/recovery-images
+    ls /usr/local/recovery_images
     image=$(choose_image)
-    if [ -f "/usr/local/recovery-images/$image" ]; then
+    if [ -f "/usr/local/recovery_images/$image" ]; then
         echo "Finding target partitions..."
         local dst=/dev/$(get_largest_nvme_namespace)
         if [[ $dst == /dev/sd* ]]; then
@@ -109,7 +109,7 @@ reco_from_bin() {
         local rootdev2=${dst}p${tgt_root2}
         echo "Targeting $kerndev, $rootdev, $kerndev2 and $rootdev2"
         local loop=$(losetup -f | tr -d '\r')
-        losetup -P "$loop" "/usr/local/recovery-images/$image"
+        losetup -P "$loop" "/usr/local/recovery_images/$image"
         echo "Press enter if nothing broke, otherwise press Ctrl+C"
         read -r
         printf "Nuking partitions in 3 (this is your last chance to cancel)..."
