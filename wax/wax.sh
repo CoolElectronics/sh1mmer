@@ -100,10 +100,10 @@ patch_sh1mmer() {
 		pv "$CHROMEBREW" | tar -xzf - --strip-components=1 -C "$MNT_SH1MMER/chromebrew"
 	fi
  
-	if [ -f ./recovery_images/*.bin ]; then
-		log_info "Copying recovery images... increase sh1mmer part size using if this fails"
-		mkdir -p $MNT_ARCH/recovery_images
-		cp -rv recovery_images/*.bin $MNT_ARCH/recovery_images/
+	if [ -f "$RECOVERY_IMAGES_DIR/"*.bin ]; then
+		log_info "Copying recovery images... this might take a while"
+		mkdir -p "$MNT_ARCH/recovery_images"
+		cp -v "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_ARCH/recovery_images"
   	fi
 
 	umount "$MNT_SH1MMER"
@@ -153,6 +153,8 @@ get_flags() {
 	DEFINE_string sh1mmer_part_size "64M" "Partition size for payload(s)" "s"
 
 	DEFINE_string extra_payload_dir "${SCRIPT_DIR}/payloads" "Extra payload dir" "e"
+
+	DEFINE_string recovery_images_dir "${SCRIPT_DIR}/recovery_images" "Recovery images dir" "r"
 
 	DEFINE_string firmware_dir "${SCRIPT_DIR}/firmware" "Insert firmware from dir" ""
 
@@ -228,8 +230,8 @@ SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not p
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
 
 # for recovery images
-if [ -f ./recovery_images/*.bin ]; then
-	RECOVERY_IMAGES_SIZE=$(du -sb ./recovery_images | awk '{print $1}')
+if [ -f "$RECOVERY_IMAGES_DIR/"*.bin ]; then
+	RECOVERY_IMAGES_SIZE=$(du -sb "$RECOVERY_IMAGES_DIR" | awk '{print $1}')
 	SH1MMER_PART_SIZE=$((SH1MMER_PART_SIZE + RECOVERY_IMAGES_SIZE))
 fi
 
