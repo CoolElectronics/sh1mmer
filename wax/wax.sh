@@ -229,7 +229,7 @@ fi
 if [ -n "$FLAGS_recovery_images_dir" ]; then
 	RECOVERY_IMAGES_DIR="$FLAGS_recovery_images_dir"
 	[ -d "$RECOVERY_IMAGES_DIR" ] || fail "$RECOVERY_IMAGES_DIR is not a directory"
-	log_info "Using recovery images: $recovery_images_dir"
+	log_info "Using recovery images: $RECOVERY_IMAGES_DIR"
 fi
 
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
