@@ -226,6 +226,12 @@ if [ -n "$FLAGS_chromebrew" ]; then
 	log_info "Using chromebrew: $CHROMEBREW"
 fi
 
+if [ -n "$FLAGS_recovery_images_dir" ]; then
+	RECOVERY_IMAGES_DIR="$FLAGS_recovery_images_dir"
+	[ -d "$RECOVERY_IMAGES_DIR" ] || fail "$RECOVERY_IMAGES_DIR is not a directory"
+	log_info "Using recovery images: $recovery_images_dir"
+fi
+
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
 
