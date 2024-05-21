@@ -99,6 +99,12 @@ patch_sh1mmer() {
 		mkdir -p "$MNT_SH1MMER/chromebrew"
 		pv "$CHROMEBREW" | tar -xzf - --strip-components=1 -C "$MNT_SH1MMER/chromebrew"
 	fi
+ 
+	if [ -d ./smut-reco ]; then
+		log_info "Copying SMUT images... increase sh1mmer part size if this fails"
+		mkdir -p $MNT_ARCH/smut-reco
+		cp -rv smut-reco/* $MNT_ARCH/smut-reco/
+  	fi
 
 	umount "$MNT_SH1MMER"
 	rmdir "$MNT_SH1MMER"
