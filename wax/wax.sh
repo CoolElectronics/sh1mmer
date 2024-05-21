@@ -100,8 +100,8 @@ patch_sh1mmer() {
 		pv "$CHROMEBREW" | tar -xzf - --strip-components=1 -C "$MNT_SH1MMER/chromebrew"
 	fi
  
-	if [ -d ./recovery_images ]; then
-		log_info "Copying recovery images... increase sh1mmer part size if this fails"
+	if [ -f ./recovery_images/*.bin ]; then
+		log_info "Copying recovery images... increase sh1mmer part size using if this fails"
 		mkdir -p $MNT_ARCH/recovery_images
 		cp -rv recovery_images/*.bin $MNT_ARCH/recovery_images/
   	fi
@@ -226,6 +226,12 @@ fi
 
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
+
+# for recovery images
+if [ -f ./recovery_images/*.bin ]; then
+	RECOVERY_IMAGES_SIZE=$(du -sb ./recovery_images | awk '{print $1}')
+	SH1MMER_PART_SIZE=$((SH1MMER_PART_SIZE + RECOVERY_IMAGES_SIZE))
+fi
 
 # sane backup table
 suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
