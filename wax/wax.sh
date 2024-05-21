@@ -236,7 +236,7 @@ SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not p
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
 
 # for recovery images
-if [ -f "$RECOVERY_IMAGES_DIR/"*.bin ]; then
+if [ -d "$RECOVERY_IMAGES_DIR" ]; then
 	RECOVERY_IMAGES_SIZE=$(du -sb "$RECOVERY_IMAGES_DIR" | awk '{print $1}')
 	SH1MMER_PART_SIZE=$((SH1MMER_PART_SIZE + RECOVERY_IMAGES_SIZE))
 fi
