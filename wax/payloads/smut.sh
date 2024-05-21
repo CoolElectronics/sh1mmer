@@ -149,7 +149,8 @@ case $choice in
       ;;
     2) 
       echo "Bye!"
-    	;;
+      exit 0
+      ;;
     *)
       echo "Invalid choice!"
       ;;
