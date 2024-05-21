@@ -102,8 +102,8 @@ patch_sh1mmer() {
  
 	if [ -f "$RECOVERY_IMAGES_DIR/"*.bin ]; then
 		log_info "Copying recovery images... this might take a while"
-		mkdir -p "$MNT_ARCH/recovery_images"
-		cp -v "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_ARCH/recovery_images"
+		mkdir -p "$MNT_SH1MMER/recovery_images"
+		cp -v "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_SH1MMER/recovery_images"
   	fi
 
 	umount "$MNT_SH1MMER"
