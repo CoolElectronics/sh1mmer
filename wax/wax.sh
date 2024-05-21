@@ -100,10 +100,10 @@ patch_sh1mmer() {
 		pv "$CHROMEBREW" | tar -xzf - --strip-components=1 -C "$MNT_SH1MMER/chromebrew"
 	fi
  
-	if [ -f "$RECOVERY_IMAGES_DIR/"*.bin ]; then
+	if [ -n "$RECOVERY_IMAGES_DIR" ]; then
 		log_info "Copying recovery images... this might take a while"
 		mkdir -p "$MNT_SH1MMER/recovery_images"
-		cp -v "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_SH1MMER/recovery_images"
+		cp "$RECOVERY_IMAGES_DIR/"*.bin "$MNT_SH1MMER/recovery_images"
   	fi
 
 	umount "$MNT_SH1MMER"
