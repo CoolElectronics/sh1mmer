@@ -221,6 +221,12 @@ fi
 SH1MMER_PART_SIZE=$(parse_bytes "$FLAGS_sh1mmer_part_size") || fail "Could not parse size '$FLAGS_sh1mmer_part_size'"
 BOOTLOADER_PART_SIZE=$(parse_bytes "$FLAGS_bootloader_part_size") || fail "Could not parse size '$FLAGS_bootloader_part_size'"
 
+# dynamic sizing
+if [ -n "$CHROMEBREW" ]; then
+	CHROMEBREW_SIZE=$(du -sb "$CHROMEBREW" | awk '{print $1}')
+	SH1MMER_PART_SIZE=$((SH1MMER_PART_SIZE + CHROMEBREW_SIZE * 105 / 100)) # 5% bigger to fix size errors
+fi
+
 # sane backup table
 suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
 

@@ -59,12 +59,12 @@ This will build a beautiful world mini shim. If you want to add chromebrew, do t
 ```
 git clone https://github.com/MercuryWorkshop/sh1mmer
 cd sh1mmer/wax
-wget https://dl.darkn.bio/api/raw/?path=/Chromebrew/chromebrew.tar.gz
-sudo bash wax.sh -i path/to/the/shim/you/downloaded.bin --chromebrew chromebrew.tar.gz -s 4G
+wget -O chromebrew.tar.gz https://dl.darkn.bio/api/raw/?path=/Chromebrew/chromebrew.tar.gz
+sudo bash wax.sh -i path/to/the/shim/you/downloaded.bin --chromebrew chromebrew.tar.gz
 ```
 
 > [!NOTE]
-> If you want to build a devshim, replace `chromebrew.tar.gz` with `chromebrew-dev.tar.gz` and replace `-s 4G` with `-s 7G` in the wax command.
+> If you want to build a devshim, replace `chromebrew.tar.gz` with `chromebrew-dev.tar.gz` in the wax command.
 > Devshim builds will mount a much larger Chromebrew partition over `/usr/local`,
 > allowing you to access a desktop environment and even Firefox from within SH1MMER.
 > It's what allowed us to [run DOOM on a shim](https://github.com/CoolElectronics/blog/blob/master/src/content/blog/breaking/doom.jpg?raw=true).
