@@ -115,7 +115,28 @@ From here, you can play around with the options and do what you want.
 
 ***
 
-### The Fog....
+### CryptoSmite
+SH1MMER has been patched by Google:tm: since v111, but since then a new unenrollment exploit for v119 and lower has released: CryptoSmite.
+By default, this is bundled inside payloads in all Sh1MMER shims, and all you need to do is flash a SH1MMER shim, go into Payloads, and run `cryptosmite.sh`.
+
+<details>
+<summary>CryptoSmite Instructions</summary>
+
+1. Download a SH1MMER Prebuilt image here: [dl.darkn.bio](<https://dl.darkn.bio/SH1mmer/Prebuilt/>), then flash a USB with it using [CRU](https://chromewebstore.google.com/detail/chromebook-recovery-utili/pocpnlppkickgojjlmhdmidojbmbodfm).
+2. Disable OS verification *(blocked or not, doesn't matter)*, and boot into the shim.
+3. Navigate to Payloads and navigate to CryptoSmite using the arrow keys, then press `Enter`.
+4. Type in `Y` then press enter, and it'll automatically reboot upon completion.
+5. Proceed through the setup partially till you get to the Add Account Screen.
+   - If you see an update prompt, reboot then press `CTRL + ALT + E` on the Wi-Fi screen.
+     - This *should* allow skipping the update, or make it not appear at all.
+8. Powerwash the Chromebook at the "Add Account" screen. Afterwards, it'll be fully unenrolled.
+
+</details>
+
+### The Fog
+> [!NOTE]
+> It is recommended to use CryptoSmite instead if you're only affected by "_The Fog...._" and nothing else.
+> The instructions to do "_The Fog...._" are old, however that doesn't mean you can't try it _**if**_ you don't wish to use CryptoSmite.
 
 Downgrading and unenrollment has been patched by Google™️.
 If your Chromebook has never updated to version 112 (or newer) before (check in `chrome://version`),
@@ -146,8 +167,10 @@ write protection will not work as normal.
 <details>
 <summary>Tsunami Bypass Details</summary>
 
-If your Chromebook is below ChromeOS version 120, unenrollment is still possible by using [cryptosmite](https://github.com/FWSmasher/CryptoSmite).
-Cryptosmite is now included as an extra payload for all shims.
+If your Chromebook is on version 114 or newer,
+unenrollment is still possible by [bridging two pins on the firmware chip](https://blog.darkn.bio/blog/the-tsunami#bypassing-instructions).
+On most devices, this will require you to take off the back of the Chromebook and then use a piece of tinfoil, wire, or other conductive material to bridge the two pins.
+This bypass is **not recommended** as you risk permanently bricking the Chromebook, please use [E-Halcyon](https://fog.gay) instead.
 
 </details>
 
