@@ -135,8 +135,8 @@ By default, this is bundled inside payloads in all Sh1MMER shims, and all you ne
 
 ### The Fog
 > [!NOTE]
-> It is recommended to use CryptoSmite instead if you're only affected by "_The Fog...._" and nothing else.
-> The instructions to do "_The Fog...._" are old, however that doesn't mean you can't try it _**if**_ you don't wish to use CryptoSmite.
+> It is recommended to use CryptoSmite instead if you're only affected by "_The Fog_" and nothing else.
+> "_The Fog_" instructions are old, however that doesn't mean you can't try it _**if**_ you don't wish to use CryptoSmite.
 
 Downgrading and unenrollment has been patched by Google™️.
 If your Chromebook has never updated to version 112 (or newer) before (check in `chrome://version`),
