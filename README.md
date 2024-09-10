@@ -117,7 +117,7 @@ From here, you can play around with the options and do what you want.
 
 ### CryptoSmite
 SH1MMER has been patched by Google™️ since v111, but since then a new unenrollment exploit for v119 and lower has released: CryptoSmite.
-By default, this is bundled inside payloads in all Sh1MMER shims, and all you need to do is flash a SH1MMER shim, go into Payloads, and run `cryptosmite.sh`.
+By default, this is bundled inside payloads in all SH1MMER shims, and all you need to do is flash a SH1MMER shim, go into Payloads, and run `cryptosmite.sh`.
 
 <details>
 <summary>CryptoSmite Instructions</summary>
