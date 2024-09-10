@@ -159,9 +159,9 @@ This will bypass both issues of The Fog and The Tsunami, however further caveats
 
 ### The Tsunami
 
-> [!NOTE]
+> [!WARNING]
 > It is **_VERY_** recommended to use CryptoSmite instead if you're on v119 or lower.
-> The instructions to do "_The Tsunami_" are extremely dangerous, even with a chip flasher. Proceed with caution if you can't use CryptoSmite.
+> The instructions to do "_The Tsunami_" are extremely dangerous, even with a chip flasher. **Proceed with caution if you can't use CryptoSmite.**
 
 Disabling write protection has also been patched by Google™️.
 If your Chromebook has never updated to version 114 (or newer) before (check in `chrome://version`),
