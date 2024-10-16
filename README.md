@@ -31,7 +31,7 @@ We can no longer provide raw RMA shims due to legal reasons. [**More information
 
 ambassador, banon, brask, brya, clapper, coral, corsola, cyan, dedede, edgar, elm, enguarde, fizz,
 glimmer, grunt, hana, hatch, jacuzzi, kalista, kefka, kukui, lulu, nami, nissa, octopus, orco, puff,
-pyro, reef, reks, relm, sand, sentry, stout, strongbad, tidus, trogdor, ultima, volteer, zork
+pyro, reef, reks, relm, sand, sentry, snappy, stout, strongbad, tidus, trogdor, ultima, volteer, zork
 
 If it's not, good luck. You'll have to try and call up your OEM and demand the files from them, which they are most unlikely to give to you.
 
