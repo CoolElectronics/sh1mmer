@@ -59,6 +59,7 @@ run_task() {
 
 mapname() {
 	case "$(basename "$1")" in
+		'daub.sh') echo -n "Remove the backup partitions and prevent autoupdates" ;;
 		'autoupdate.sh') echo -n "Fetch updated payloads. REQUIRES WIFI (not working)" ;;
 		'caliginosity.sh') echo -n "Revert all changes made by sh1mmer (reenroll + more)" ;;
 		'crap.sh') echo -n "CRAP - ChromeOS Automated Partitioning" ;;
