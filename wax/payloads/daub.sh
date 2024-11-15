@@ -58,7 +58,7 @@ function main() {
     ) | fdisk "$disk" 2>/dev/null
 
     echo "Formatting stateful."
-    mkfs.ext4 -F -b 4096 -L H-STATE "$TARGET_PART" >/dev/null 2>&1
+    mkfs.ext4 -F -b 4096 -L H-STATE "${disk}p1" >/dev/null 2>&1
 
     echo "Done!"
     return 0
