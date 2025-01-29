@@ -154,8 +154,10 @@ tty_init() {
 	fi
 	# /dev/tty1 should be tried earlier if the device has fbdev and fbcon.
 	if ! pgrep frecon >/dev/null 2>&1; then
+		export HAS_FRECON=0
 		ttys="${ttys} tty1"
 	else
+		export HAS_FRECON=1
 		tty_start_frecon
 		local frecon_tty="$(readlink -f ${FRECON_TTY})"
 		ttys="${frecon_tty#/dev/} ${ttys}"
@@ -176,10 +178,12 @@ tty_init() {
 	DEBUG_TTY="$(tty_find_relative "${TTY}" 3)"
 	# Sending escapes to enable input. Frecon is changing it's behavior
 	# to disable input and cursor by default. See b/271954812.
-	config_console "${TTY}" --enable_input
-	config_console "${LOG_TTY}" --enable_input
-	config_console "${INFO_TTY}" --enable_input
-	config_console "${DEBUG_TTY}" --enable_input
+	if [ $HAS_FRECON -eq 1 ]; then
+		config_console "${TTY}" --enable_input
+		config_console "${LOG_TTY}" --enable_input
+		config_console "${INFO_TTY}" --enable_input
+		config_console "${DEBUG_TTY}" --enable_input
+	fi
 	kernel_msg "TTY=${TTY} LOG=${LOG_TTY} INFO=${INFO_TTY} DEBUG=${DEBUG_TTY}"
 }
 

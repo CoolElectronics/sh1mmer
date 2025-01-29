@@ -13,7 +13,7 @@ ARCHITECTURE="${4:-x86_64}"
 
 ROOTFS_DEV=
 
-SCRIPT_DATE="[2024-04-16]"
+SCRIPT_DATE="[2024-10-27]"
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -102,8 +102,9 @@ determine_rootfs() {
 }
 
 patch_new_root_sh1mmer() {
-	# ctrl+u boot unlock (to be improved)
-	[ -f "$NEWROOT_MNT/etc/init/startup.conf" ] && sed -i "s/exec/pre-start script\nvpd -i RW_VPD -s block_devmode=0\ncrossystem block_devmode=0\nend script\n\nexec/" "$NEWROOT_MNT/etc/init/startup.conf"
+	[ -f "$NEWROOT_MNT/sbin/chromeos_startup" ] && sed -i "s/BLOCK_DEVMODE=1/BLOCK_DEVMODE=/g" "$NEWROOT_MNT/sbin/chromeos_startup"
+	[ -f "$NEWROOT_MNT/usr/share/cros/dev_utils.sh" ] && sed -i "/^dev_check_block_dev_mode\(\)/a return" "$NEWROOT_MNT/usr/share/cros/dev_utils.sh"
+	[ -f "$NEWROOT_MNT/sbin/chromeos-boot-alert" ] && sed -i "/^mode_block_devmode\(\)/a return" "$NEWROOT_MNT/sbin/chromeos-boot-alert"
 	# disable factory-related jobs
 	local file
 	local disable_jobs="factory_shim factory_install factory_ui"

@@ -9,9 +9,16 @@ else
 	exit 1
 fi
 
-for file in /tmp/movie_payload/*.png; do
-	printf "\033]image:file=$file;scale=1\a"
-	sleep 0.03
-done
+if [ $HAS_FRECON -eq 1 ]; then
+	for file in /tmp/movie_payload/*.png; do
+		printf "\033]image:file=$file;scale=1\a"
+		sleep 0.03
+	done
+else
+	for file in /tmp/movie_payload/*.png; do
+		ply-image "$file" 2>/dev/null
+		sleep 0.03
+	done
+fi
 
 rm -rf /tmp/movie_payload

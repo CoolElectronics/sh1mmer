@@ -2,7 +2,7 @@
 
 set -eE
 
-SCRIPT_DATE="[2024-04-16]"
+SCRIPT_DATE="[2024-11-11]"
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -40,8 +40,8 @@ get_largest_cros_blockdev() {
 		tmp_size=$(cat "$blockdev"/size)
 		remo=$(cat "$blockdev"/removable)
 		if [ "$tmp_size" -gt "$size" ] && [ "${remo:-0}" -eq 0 ]; then
-			case "$(sfdisk -l -o name "/dev/$dev_name" 2>/dev/null)" in
-				*STATE*KERN-A*ROOT-A*KERN-B*ROOT-B*)
+			case "$(sfdisk -d "/dev/$dev_name" 2>/dev/null)" in
+				*'name="STATE"'*'name="KERN-A"'*'name="ROOT-A"'*)
 					largest="/dev/$dev_name"
 					size="$tmp_size"
 					;;
@@ -80,13 +80,22 @@ reprovision() {
 
 unblock_devmode() {
 	echo "Unblocking devmode..."
+	local res
 	vpd -i RW_VPD -s block_devmode=0
 	crossystem block_devmode=0
-	local res
-	res=$(cryptohome --action=get_firmware_management_parameters 2>&1)
-	if [ $? -eq 0 ] && ! echo "$res" | grep -q "Unknown action"; then
-		tpm_manager_client take_ownership
-		cryptohome --action=remove_firmware_management_parameters
+	if [ -e /etc/init/tcsd.conf ]; then
+		initctl stop tcsd || :
+		if tpmc getp 0x100a >/dev/null 2>&1; then
+			tpmc clear
+			tpmc def 0x100a 0x28 0x12000
+			tpmc write 0x100a 76 28 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+		fi
+	else
+		res=$(cryptohome --action=get_firmware_management_parameters 2>&1)
+		if [ $? -eq 0 ] && ! echo "$res" | grep -q "Unknown action"; then
+			tpm_manager_client take_ownership
+			cryptohome --action=remove_firmware_management_parameters
+		fi
 	fi
 }
 
@@ -100,6 +109,23 @@ enable_usb_boot() {
 reset_gbb_flags() {
 	echo "Resetting GBB flags... This will only work if WP is disabled"
 	/usr/share/vboot/bin/set_gbb_flags.sh 0x0
+}
+
+wipe_stateful() {
+	local cros_dev="$(get_largest_cros_blockdev)"
+	if [ -z "$cros_dev" ]; then
+		echo "No CrOS SSD found on device!"
+		return 1
+	fi
+	local stateful=$(format_part_number "$cros_dev" 1)
+	echo "This will erase all user data on ${stateful}"
+	echo "Continue? (y/N)"
+	read -r action
+	case "$action" in
+		[yY]) : ;;
+		*) return ;;
+	esac
+	mkfs.ext4 -F -b 4096 -L H-STATE "$stateful"
 }
 
 touch_developer_mode() {
@@ -185,6 +211,8 @@ run_task() {
 	read -res
 }
 
+mkdir -p -m 1777 /run/lock
+
 mkdir -p /mnt/sh1mmer /usr/local
 if mount /dev/disk/by-label/SH1MMER /mnt/sh1mmer >/dev/null 2>&1; then
 	mount --bind /mnt/sh1mmer/chromebrew /usr/local >/dev/null 2>&1 || umount /mnt/sh1mmer
@@ -207,6 +235,7 @@ while :; do
 	echo "(m) Unblock devmode"
 	echo "(u) Enable USB/altfw boot"
 	echo "(g) Reset GBB flags (WP must be disabled)"
+	echo "(w) Wipe stateful"
 	echo "(h) Touch .developer_mode (skip 5 minute delay)"
 	echo "(v) Remove rootfs verification"
 	echo "(t) Call chromeos-tpm-recovery"
@@ -223,6 +252,7 @@ while :; do
 	[mM]) run_task unblock_devmode ;;
 	[uU]) run_task enable_usb_boot ;;
 	[gG]) run_task reset_gbb_flags ;;
+	[wW]) run_task wipe_stateful ;;
 	[hH]) run_task touch_developer_mode ;;
 	[vV]) run_task disable_verity ;;
 	[tT]) run_task chromeos-tpm-recovery ;;

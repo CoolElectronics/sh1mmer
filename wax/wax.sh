@@ -5,7 +5,7 @@ SCRIPT_DIR=${SCRIPT_DIR:-"."}
 
 set -eE
 
-SCRIPT_DATE="2024-04-16"
+SCRIPT_DATE="2024-11-10"
 
 echo "┌─────────────────────────────────────────────────────────────────┐"
 echo "│ Welcome to wax, a shim modifying automation tool                │"
@@ -165,7 +165,6 @@ get_flags() {
 	DEFINE_string finalsizefile "" "Write final image size in bytes to this file" ""
 
 	FLAGS "$@" || exit $?
-	# eval set -- "$FLAGS_ARGV" # we don't need this
 
 	if [ -z "$FLAGS_image" ]; then
 		flags_help || :

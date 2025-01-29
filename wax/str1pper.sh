@@ -5,7 +5,7 @@ SCRIPT_DIR=${SCRIPT_DIR:-"."}
 
 set -eE
 
-SCRIPT_DATE="2024-02-12"
+SCRIPT_DATE="2024-11-10"
 
 echo "┌────────────────────────────────────────────────────────────────────────────────────┐"
 echo "│ str1pper spash text                                                                │"
@@ -20,10 +20,23 @@ missing_deps=$(check_deps partx sgdisk mkfs.ext4)
 
 STATEFUL_SIZE=$((4 * 1024 * 1024)) # 4 MiB
 
+HAS_CROS_PAYLOADS=0
+
 cleanup() {
 	[ -d "$MNT_STATE" ] && umount "$MNT_STATE" && rmdir "$MNT_STATE"
 	[ -z "$LOOPDEV" ] || losetup -d "$LOOPDEV" || :
 	trap - EXIT INT
+}
+
+check_stateful() {
+	MNT_STATE=$(mktemp -d)
+	if mount -o ro,noload "${LOOPDEV}p1" "$MNT_STATE"; then
+		if [ -d "$MNT_STATE"/cros_payloads ]; then
+			HAS_CROS_PAYLOADS=1
+		fi
+		umount "$MNT_STATE"
+	fi
+	rmdir "$MNT_STATE"
 }
 
 recreate_stateful() {
@@ -60,7 +73,6 @@ get_flags() {
 	DEFINE_boolean debug "$FLAGS_FALSE" "Print debug messages" "d"
 
 	FLAGS "$@" || exit $?
-	# eval set -- "$FLAGS_ARGV" # we don't need this
 
 	if [ -z "$FLAGS_image" ]; then
 		flags_help || :
@@ -75,13 +87,22 @@ check_file_rw "$IMAGE" || fail "$IMAGE doesn't exist, isn't a file, or isn't RW"
 check_gpt_image "$IMAGE" || fail "$IMAGE is not GPT, or is corrupted"
 check_slow_fs "$IMAGE"
 
-suppress "$SFDISK" --delete "$IMAGE" 1
-safesync
+# sane backup table
+suppress sgdisk -e "$IMAGE" 2>&1 | sed 's/\a//g'
 
 log_info "Creating loop device"
 LOOPDEV=$(losetup -f)
 losetup -P "$LOOPDEV" "$IMAGE"
 safesync
+
+check_stateful || :
+if [ $HAS_CROS_PAYLOADS -eq 0 ]; then
+	for i in 4 5 6 7; do
+		"$CGPT" add "$LOOPDEV" -i "$i" -s 1
+		partx -u -n "$i" "$LOOPDEV"
+	done
+fi
+suppress "$SFDISK" --delete "$IMAGE" 1
 
 squash_partitions "$LOOPDEV"
 safesync
@@ -95,5 +116,5 @@ safesync
 truncate_image "$IMAGE"
 safesync
 
-log_info "Done. Have fun!"
+log_info "Done!"
 trap - EXIT

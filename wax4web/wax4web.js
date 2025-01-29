@@ -15,8 +15,6 @@ const wax4webDirections = `
 </p>
 <p>
 	Before pressing start, you may select or deselect any of the options below.
-	<!--<br><b>Important:</b> if your board is <b>hana</b> or <b>coral</b> or any other
-	pre-frecon board, you <b>must</b> check the "legacy" box!-->
 </p>
 <p>
 	Next, hit the start button and select your .bin file. The VM will start up. This will use a

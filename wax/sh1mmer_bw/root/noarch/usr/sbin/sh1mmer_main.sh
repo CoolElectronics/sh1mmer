@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DATE="[2024-04-16]"
+SCRIPT_DATE="[2024-11-11]"
 
 . /usr/sbin/sh1mmer_gui.sh
 . /usr/sbin/sh1mmer_optionsSelector.sh
@@ -9,6 +9,8 @@ setup
 showbg Disclaimer.png
 sleep 1
 read -rsn1
+
+mkdir -p -m 1777 /run/lock
 
 mkdir -p /mnt/sh1mmer /usr/local
 if mount /dev/disk/by-label/SH1MMER /mnt/sh1mmer >/dev/null 2>&1; then

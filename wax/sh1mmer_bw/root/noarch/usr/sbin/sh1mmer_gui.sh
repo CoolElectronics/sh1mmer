@@ -20,11 +20,12 @@ function movecursor_Credits() {
 }
 
 function showbg() {
-	printf "\033]image:file=/usr/share/sh1mmer-assets/$1;scale=1\a" # display image
-}
-
-function cleargui() {
-	printf "\033]box:color=0x00FFFFFF;size=530,200;offset=-250,-125\a"
+	local image="/usr/share/sh1mmer-assets/$1"
+	if [ $HAS_FRECON -eq 1 ]; then
+		printf "\033]image:file=$image;scale=1\a"
+	else
+		ply-image "$image" 2>/dev/null
+	fi
 }
 
 function test() {
@@ -35,4 +36,3 @@ function test() {
 	sleep 1
 	cleanup
 }
-

@@ -2,7 +2,7 @@
 #
 # ChromeOS Automated Partitioning (CRAP)
 # https://github.com/chrultrabook/crap
-# Copyright (C) 2023 - BinBashBanana
+# Copyright (C) 2023-2024 - BinBashBanana
 # Contributors add their names here
 #
 # License pending...
@@ -17,7 +17,7 @@
 set -eE
 
 # variable variables
-SCRIPT_DATE="[2024-01-13]"
+SCRIPT_DATE="[2024-11-11]"
 
 # optional variables
 [ -z "$CRAP_TESTING" ] && CRAP_TESTING=0
@@ -40,6 +40,24 @@ fail() {
 	exit 1
 }
 
+IS_CROS=0
+[ -f /etc/lsb-release ] && grep -q '\(Chrome OS\|Chromium OS\|neverware\)' /etc/lsb-release && IS_CROS=1
+
+readlink /proc/$$/exe | grep -q bash || fail "Please run with bash"
+[ -t 0 ] || fail "Please do not pipe into bash. Run as an argument to bash, or use process substitution if needed."
+grandparent_pid=$(ps -o ppid= $PPID | tr -d '[:space:]')
+[ -n "$grandparent_pid" ] && readlink /proc/$grandparent_pid/exe | grep -q crosh && fail "Please run from a VT, not from crosh. Press [ Ctrl ] [ Alt ] [ -> ] (F2) to switch to VT2."
+[ "$IS_CROS" -eq 1 ] && [ "$SUDO_USER" = chronos ] || [ "$EUID" -ne 0 ] && fail "Please run logged in as root (not using sudo)"
+
+check_deps() {
+	for dep in "$@"; do
+		command -v "$dep" &>/dev/null || echo "$dep"
+	done
+}
+
+missing_deps=$(check_deps sfdisk cgpt partx blockdev mkfs.ext4 tune2fs e2fsck resize2fs)
+[ -n "$missing_deps" ] && fail "The following required commands weren't found in PATH:\n${missing_deps}"
+
 log_debug() {
 	[ "$CRAP_DEBUG" -eq 1 ] && printf "%b\n" "$*" >&2 || :
 }
@@ -60,26 +78,9 @@ suppress_out() {
 	fi
 }
 
-IS_CROS=0
-[ -f /etc/lsb-release ] && grep -q '\(Chrome OS\|Chromium OS\|neverware\)' /etc/lsb-release && IS_CROS=1
-
-readlink /proc/$$/exe | grep -q bash || fail "Please run with bash"
-[ "$EUID" -ne 0 ] && fail "Please run as root"
-grandparent_pid=$(ps -o ppid= $PPID | tr -d '[:space:]')
-[ -n "$grandparent_pid" ] && readlink /proc/$grandparent_pid/exe | grep -q crosh && fail "Please run from a VT, not from crosh. Press [ Ctrl ] [ Alt ] [ -> ] (F2) to switch to VT2."
-
 format_bytes() {
 	numfmt --to=iec-i --suffix=B "$@"
 }
-
-check_deps() {
-	for dep in "$@"; do
-		command -v "$dep" &>/dev/null || echo "$dep"
-	done
-}
-
-missing_deps=$(check_deps sfdisk cgpt partx blockdev e2fsck resize2fs)
-[ -n "$missing_deps" ] && fail "The following required commands weren't found in PATH:\n${missing_deps}"
 
 get_largest_blockdev() {
 	local largest size dev_name tmp_size remo
@@ -106,8 +107,8 @@ get_largest_cros_blockdev() {
 		tmp_size=$(cat "$blockdev"/size)
 		remo=$(cat "$blockdev"/removable)
 		if [ "$tmp_size" -gt "$size" ] && [ "${remo:-0}" -eq 0 ]; then
-			case "$(sfdisk -l -o name "/dev/$dev_name" 2>/dev/null)" in
-				*STATE*KERN-A*ROOT-A*KERN-B*ROOT-B*)
+			case "$(sfdisk -d "/dev/$dev_name" 2>/dev/null)" in
+				*'name="STATE"'*'name="KERN-A"'*'name="ROOT-A"'*)
 					largest="/dev/$dev_name"
 					size="$tmp_size"
 					;;
@@ -161,7 +162,9 @@ unmount_stateful() {
 	# note that we CANNOT lazy unmount.
 	if [ "$IS_CROS" -eq 1 ]; then
 		# this took me about 2 weeks to figure out :sob:
+		# we must call chromeos_shutdown twice on older versions
 		suppress initctl start pre-shutdown || :
+		suppress chromeos_shutdown || :
 		suppress chromeos_shutdown || :
 	fi
 	# fall back to this, we're not in CrOS, or maybe in a recovery image?
@@ -219,7 +222,7 @@ print_disk_info() {
 
 resize_stateful_menu() {
 	local num_action new_bytes new_sectors new_blocks resize2fs_out
-	if ! unmount_stateful ; then
+	if ! unmount_stateful; then
 		clear_screen
 		echo -e "${COLOR_RED_B}Failed to unmount stateful."
 		echo -e "You may proceed, but shrinking of the partition will DESTROY YOUR DATA.${COLOR_RESET}"
@@ -280,7 +283,7 @@ resize_stateful_menu() {
 			continue
 		fi
 		if [ "$STATEFUL_VALID_FS" -eq 1 ] && [ "$new_bytes" -lt "$STATEFUL_FS_USAGE" ]; then
-			echo -e "${COLOR_RED_B}The size you entered ($(format_bytes "$new_bytes")) is smaller than the filesystem."
+			echo -e "${COLOR_RED_B}The size you entered ($(format_bytes "$new_bytes")) is less than the filesystem usage."
 			echo -e "You may proceed, but this will DESTROY YOUR DATA.${COLOR_RESET}"
 			echo -e "${COLOR_CYAN_B}Would you like to continue? ${COLOR_YELLOW_B}(y/N)${COLOR_RESET}"
 			read -re action
@@ -324,6 +327,10 @@ resize_stateful_menu() {
 		if [ "$new_sectors" -lt "$STATEFUL_SECTORS" ]; then
 			cgpt add -i 1 -s "$new_sectors" "$CRAP_DISK"
 			partx -u -n 1 "$CRAP_DISK"
+			# re-create stateful if necessary and possible
+			if [ "$STATEFUL_VALID_FS" -eq 0 ] && [ "$STATEFUL_MOUNTED" -eq 0 ]; then
+				wipe_stateful || :
+			fi
 		fi
 		echo -e "${COLOR_GREEN_B}Success.${COLOR_RESET}"
 		break
@@ -433,7 +440,7 @@ fix_1s_parts() {
 	if [ -z "$NEEDS_1S_FIX" ]; then
 		echo -e "${COLOR_GREEN_B}Success.${COLOR_RESET}"
 	else
-		echo -e "${COLOR_RED_B}An error occured and the partitions were not properly reordered."
+		echo -e "${COLOR_RED_B}An error occurred and the partitions were not properly reordered."
 		echo -e "Current partition table is shown below:${COLOR_RESET}"
 		sfdisk -l "$CRAP_DISK"
 	fi
@@ -455,6 +462,40 @@ check_1s_parts_prompt() {
 	esac
 	fix_1s_parts
 	main_menu
+}
+
+wipe_stateful() {
+	local stateful_mnt
+	suppress mkfs.ext4 -F -b 4096 -L H-STATE "$STATEFUL_PART" || return 1
+	stateful_mnt=$(mktemp -d)
+	mount "$STATEFUL_PART" "$stateful_mnt"
+	touch "$stateful_mnt/.developer_mode"
+	umount "$stateful_mnt"
+	rmdir "$stateful_mnt"
+}
+
+recreate_stateful() {
+	if ! unmount_stateful; then
+		clear_screen
+		echo -e "${COLOR_RED_B}Failed to unmount stateful. Cannot continue."
+		wait_on_enter_menu
+		return
+	fi
+	clear_screen
+	echo -e "This will erase all data on ${STATEFUL_PART}"
+	echo -e "${COLOR_CYAN_B}Continue? ${COLOR_YELLOW_B}(y/N)${COLOR_RESET}"
+	read -re action
+	case "$action" in
+		[yY]) : ;;
+		*) return ;;
+	esac
+	if wipe_stateful; then
+		echo -e "${COLOR_GREEN_B}Success.${COLOR_RESET}"
+	else
+		echo -e "${COLOR_RED_B}An error occurred and stateful was not re-created.${COLOR_RESET}"
+	fi
+	refresh_stateful
+	wait_on_enter_menu
 }
 
 cleanup() {
@@ -484,6 +525,8 @@ main_menu() {
 			echo -e "║    ${COLOR_BLACK_B}detect existing partitions. Highly recommended before${COLOR_RESET}           ║"
 			echo -e "║    ${COLOR_BLACK_B}installing linux alongside ChromeOS.${COLOR_RESET}                            ║"
 		fi
+		echo -e "║ ${COLOR_YELLOW_B}3) ${COLOR_CYAN_B}Re-create stateful filesystem${COLOR_RESET}                                   ║"
+		echo -e "║    Reset the ChromeOS user data partition to a factory state.      ║"
 		echo -e "║ ${COLOR_RED_B}Q) ${COLOR_CYAN_B}Quit${COLOR_RESET}                                                            ║"
 		echo -e "║ ${COLOR_RED_B}R) ${COLOR_CYAN_B}Reboot${COLOR_RESET}                                                          ║"
 		echo -e "║ ${COLOR_RED_B}P) ${COLOR_CYAN_B}Poweroff${COLOR_RESET}                                                        ║"
@@ -493,6 +536,7 @@ main_menu() {
 		case "$action" in
 			1) resize_stateful_menu ;;
 			2) fix_1s_parts ;;
+			3) recreate_stateful ;;
 			[qQ])
 				check_1s_parts_prompt
 				cleanup

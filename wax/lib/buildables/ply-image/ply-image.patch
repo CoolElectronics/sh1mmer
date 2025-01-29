@@ -1,0 +1,13 @@
+diff --git a/src/Makefile b/src/Makefile
+index f7d7f26..05829bd 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -25,7 +25,7 @@ all: $(OUT)/ply-image
+ 
+ $(OUT)/ply-image: $(C) $(H) Makefile
+ 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(C) -o $@ \
+-		-lpng -lrt -lm `$(PKG_CONFIG) --libs --cflags libdrm`
++		-static -lrt -lm `$(PKG_CONFIG) --static --libs --cflags libdrm libpng`
+ 
+ clean:
+ 	rm -f ply-image *~

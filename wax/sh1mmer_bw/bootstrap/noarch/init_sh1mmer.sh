@@ -13,7 +13,7 @@ ARCHITECTURE="${4:-x86_64}"
 
 ROOTFS_DEV=
 
-SCRIPT_DATE="[2024-04-16]"
+SCRIPT_DATE="[2024-10-27]"
 
 COLOR_RESET="\033[0m"
 COLOR_BLACK_B="\033[1;30m"
@@ -103,8 +103,9 @@ determine_rootfs() {
 
 patch_new_root_sh1mmer() {
 	cp /bin/frecon-lite "$NEWROOT_MNT/sbin/frecon-lite"
-	# ctrl+u boot unlock (to be improved)
-	[ -f "$NEWROOT_MNT/etc/init/startup.conf" ] && sed -i "s/exec/pre-start script\nvpd -i RW_VPD -s block_devmode=0\ncrossystem block_devmode=0\nend script\n\nexec/" "$NEWROOT_MNT/etc/init/startup.conf"
+	[ -f "$NEWROOT_MNT/sbin/chromeos_startup" ] && sed -i "s/BLOCK_DEVMODE=1/BLOCK_DEVMODE=/g" "$NEWROOT_MNT/sbin/chromeos_startup"
+	[ -f "$NEWROOT_MNT/usr/share/cros/dev_utils.sh" ] && sed -i "/^dev_check_block_dev_mode\(\)/a return" "$NEWROOT_MNT/usr/share/cros/dev_utils.sh"
+	[ -f "$NEWROOT_MNT/sbin/chromeos-boot-alert" ] && sed -i "/^mode_block_devmode\(\)/a return" "$NEWROOT_MNT/sbin/chromeos-boot-alert"
 	# disable factory-related jobs
 	local file
 	local disable_jobs="factory_shim factory_install factory_ui"
@@ -131,17 +132,25 @@ mount -t tmpfs tmpfs "$NEWROOT_MNT" -o "size=$TMPFS_SIZE" || fail "Failed to mou
 determine_rootfs || fail "Could not determine rootfs"
 mount -o ro "$ROOTFS_DEV" "$ROOTFS_MNT" || fail "Failed to mount rootfs $ROOTFS_DEV"
 
-# start our known good frecon-lite build
-exec </dev/null >/dev/null 2>&1
-pkill -9 frecon || :
-rm -rf /run/frecon
-frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
-exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
-disable_input
-printf "\033]input:on\a\033]switchvt:0\a"
+if pgrep frecon >/dev/null 2>&1; then
+	# start our known good frecon-lite build
+	exec </dev/null >/dev/null 2>&1
+	pkill -9 frecon || :
+	rm -rf /run/frecon
+	frecon-lite --enable-vt1 --daemon --no-login --enable-vts --pre-create-vts --num-vts=8 --enable-gfx
+	until [ -e /run/frecon/vt0 ]; do
+		sleep 0.1
+	done
+	exec </run/frecon/vt0 >/run/frecon/vt0 2>&1
+	disable_input
+	printf "\033]input:on\a\033]switchvt:0\a"
+	printf "\033]image:file=/bin/startingUp.png;scale=1\a"
+else
+	printf "\033[?25l\033[2J"
+	ply-image /bin/startingUp.png 2>/dev/null
+fi
 
-printf "\033]image:file=/bin/startingUp.png;scale=1\a"
-
+printf "\033[H"
 clear_line
 pv_dircopy "$ROOTFS_MNT" "$NEWROOT_MNT"
 umount "$ROOTFS_MNT"

@@ -27,6 +27,7 @@ wax/lib/buildables/flashrom/flashrom-repo
 wax/lib/buildables/flashrom/lib
 wax/lib/buildables/flashrom/pciutils
 wax/lib/buildables/flashrom/systemd
+wax/lib/buildables/ply-image/ply-image-repo
 wax4web/br
 wax4web/buildroot-2023.02.9
 wax4web/buildroot-2023.02.9-wax

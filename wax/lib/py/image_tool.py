@@ -405,7 +405,7 @@ class CrosPayloadUtils:
   def GetCrosRMAMetadata(cls):
     if not cls._cros_rma_metadata_path:
       cls._cros_rma_metadata_path = os.path.join(
-          cls.GetCrosPayloadsDir(), CROS_RMA_METADATA)
+          "cros_payloads", CROS_RMA_METADATA)
     return cls._cros_rma_metadata_path
 
   @classmethod
@@ -1230,7 +1230,7 @@ def _WriteRMAMetadata(stateful, board_list):
     stateful: path of stateful partition mount point.
     board_list: a list of RMAImageBoardInfo object.
   """
-  payloads_dir = os.path.join(stateful, CrosPayloadUtils.GetCrosPayloadsDir())
+  payloads_dir = os.path.join(stateful, "cros_payloads")
   content = json.dumps([b.ToDict() for b in board_list])
   SysUtils.WriteFileToMountedDir(payloads_dir, CROS_RMA_METADATA, content)
 
@@ -1247,7 +1247,7 @@ def _ReadRMAMetadata(stateful):
   Raises:
     RuntimeError if the file doesn't exist and cannot auto-generate either.
   """
-  DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+  DIR_CROS_PAYLOADS = "cros_payloads"
   PATH_CROS_RMA_METADATA = os.path.join(
       stateful, CrosPayloadUtils.GetCrosRMAMetadata())
   if os.path.exists(PATH_CROS_RMA_METADATA):
@@ -1339,7 +1339,7 @@ def _ReadBoardResourceVersions(rootfs, stateful, board_info):
   versions = {
       'board': board_info.board,
       'install_shim': _GetInstallShimVersion(rootfs)}
-  DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+  DIR_CROS_PAYLOADS = "cros_payloads"
   json_path = CrosPayloadUtils.GetJSONPath(
       os.path.join(stateful, DIR_CROS_PAYLOADS), board_info.board)
   payload_versions = CrosPayloadUtils.GetComponentVersions(json_path)
@@ -1937,7 +1937,7 @@ class ChromeOSFactoryBundle:
       return total_size
 
     new_size = self.InitDiskImage(output, sectors, sector_size, verbose)
-    DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+    DIR_CROS_PAYLOADS = "cros_payloads"
     payloads_dir = os.path.join(self._temp_dir, DIR_CROS_PAYLOADS)
     SysUtils.CreateDirectories(payloads_dir)
     self.CreatePayloads(payloads_dir)
@@ -2015,7 +2015,7 @@ class ChromeOSFactoryBundle:
     # (due to gz), and run build_payloads using root, which are all not easy.
     # As a result, here we want to create payloads in temporary folder then copy
     # into disk image.
-    DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+    DIR_CROS_PAYLOADS = "cros_payloads"
     payloads_dir = os.path.join(self._temp_dir, DIR_CROS_PAYLOADS)
     SysUtils.CreateDirectories(payloads_dir)
     json_path = CrosPayloadUtils.GetJSONPath(payloads_dir, self.board)
@@ -2081,7 +2081,7 @@ class ChromeOSFactoryBundle:
 
     with Partition(output, PART_CROS_STATEFUL).Mount(rw=True) as stateful:
       print('Moving payload files to disk image...')
-      DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+      DIR_CROS_PAYLOADS = "cros_payloads"
       new_name = os.path.join(stateful, DIR_CROS_PAYLOADS)
       new_dir = os.path.dirname(new_name)
       if os.path.exists(new_name):
@@ -2102,7 +2102,7 @@ class ChromeOSFactoryBundle:
 
     stateful_part = gpt.GetPartition(PART_CROS_STATEFUL)
     with stateful_part.Mount() as stateful:
-      DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+      DIR_CROS_PAYLOADS = "cros_payloads"
       payloads_dir = os.path.join(stateful, DIR_CROS_PAYLOADS)
       if not os.path.exists(payloads_dir):
         raise RuntimeError(
@@ -2150,7 +2150,7 @@ class ChromeOSFactoryBundle:
       """Returns a list of (resource name, resource size) of the board."""
       resources = []
       with Partition(self.image, PART_CROS_STATEFUL).Mount() as stateful:
-        DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+        DIR_CROS_PAYLOADS = "cros_payloads"
         payloads_dir = os.path.join(stateful, DIR_CROS_PAYLOADS)
         json_path = CrosPayloadUtils.GetJSONPath(payloads_dir, self.board)
         json_file = os.path.basename(json_path)
@@ -3272,7 +3272,7 @@ class ReplaceRMAComponentCommand(SubCommand):
             temp_dir=temp_dir, board=self.args.board, release_image=None,
             test_image=None, toolkit=None, factory_shim=self.args.factory_shim)
         with Partition(self.args.image, PART_CROS_STATEFUL).Mount() as stateful:
-          DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+          DIR_CROS_PAYLOADS = "cros_payloads"
           src_payloads_dir = os.path.join(stateful, DIR_CROS_PAYLOADS)
           bundle.CreateRMAImage(
               single_board_image, src_payloads_dir=src_payloads_dir)
@@ -3347,7 +3347,7 @@ class ToolkitCommand(SubCommand):
             self.args.board = rma_metadata[0].board
           else:
             raise RuntimeError('Board not set.')
-        DIR_CROS_PAYLOADS = CrosPayloadUtils.GetCrosPayloadsDir()
+        DIR_CROS_PAYLOADS = "cros_payloads"
         old_payloads_dir = os.path.join(stateful, DIR_CROS_PAYLOADS)
         old_json_path = CrosPayloadUtils.GetJSONPath(old_payloads_dir,
                                                      self.args.board)

@@ -34,6 +34,10 @@ log_info() {
 	printf "${COLOR_GREEN}Info: %b${COLOR_RESET}\n" "$*" || :
 }
 
+log_warn() {
+	printf "${COLOR_YELLOW}Warning: %b${COLOR_RESET}\n" "$*" || :
+}
+
 log_error() {
 	printf "${COLOR_RED_B}Error: %b${COLOR_RESET}\n" "$*" || :
 }
@@ -138,7 +142,7 @@ check_semver_ge() {
 	[ "$major" -gt "$2" ] && return 0
 	[ "$minor" -lt "$3" ] && return 1
 	[ "$minor" -gt "$3" ] && return 0
-	[ "${patch:-0}" -lt "$4" ] && return 1
+	[ "${patch:-0}" -lt "${4:-0}" ] && return 1
 	return 0
 }
 

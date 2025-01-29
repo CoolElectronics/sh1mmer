@@ -29,21 +29,15 @@ and see what board it corresponds to. **DO NOT DOWNLOAD A RECOVERY IMAGE FROM [c
 If your board name is in the list below, great! Find the RAW RMA shim corresponding to your board online.
 We can no longer provide raw RMA shims due to legal reasons. [**More information here**](https://discord.gg/egWXwEDWKP).
 
-ambassador, brask, brya, clapper, coral, corsola, dedede, enguarde, glimmer,
-grunt, hana, hatch, jacuzzi, kefka, kukui, lulu, nami, nissa, octopus, orco,
-pyro, reks, sentry, stout, strongbad, tidus, ultima, volteer, zork
+ambassador, banon, brask, brya, clapper, coral, corsola, cyan, dedede, edgar, elm, enguarde, fizz,
+glimmer, grunt, hana, hatch, jacuzzi, kalista, kefka, kukui, lulu, nami, nissa, octopus, orco, puff,
+pyro, reef, reks, relm, sand, sentry, snappy, stout, strongbad, tidus, trogdor, ultima, volteer, zork
 
 If it's not, good luck. You'll have to try and call up your OEM and demand the files from them, which they are most unlikely to give to you.
 
 ***
 
 ### Building A Beautiful World Shim
-
-<!--
-> [!IMPORTANT]
-> If you're using `coral`, `hana`, or some other older (pre-frecon) boards: <br />
-> **DO NOT FOLLOW THESE INSTRUCTIONS!** Instead, skip to the "[Building A Legacy Shim](#building-a-legacy-shim)" section.
--->
 
 Now you can start building. Type out all of these commands in the terminal.
 You need to be on Linux or WSL2 and have the following packages installed: `git`, `wget`.
@@ -78,9 +72,6 @@ After injecting, you may continue to the "[Booting Into A Shim](#booting-into-a-
 
 ### Building A Legacy Shim
 
-The factory shims for boards such as `hana` or `coral` were built before graphics support was added into the tty.
-This makes it impossible for the Beautiful World GUI to work and thus a legacy CLI-only shim must be built.
-
 Type out all of these commands in the terminal.
 
 ```
@@ -113,11 +104,22 @@ This should enable Developer Mode or turn off OS Verification.
 Press `ESC + Refresh (↻) + Power (⏻)` at the same time again, then plug in your USB with SH1MMER and you should be booting into the Beautiful World GUI or a CLI screen.
 From here, you can play around with the options and do what you want.
 
+> [!NOTE]
+> On `hana` and `elm` devices, you may need to re-enter recovery mode quickly after enabling developer mode
+> (skipping the "OS verification is OFF" screen).
+
 ***
 
-### The Fog....
+### CryptoSmite
+SH1MMER has been patched by Google since v111, but since then a new unenrollment exploit for v119 and lower has released: [CryptoSmite](https://github.com/FWSmasher/CryptoSmite).
+By default, this is bundled inside payloads in all SH1MMER shims; and all you need to do is boot SH1MMER, go to the payloads menu, and run the "Cryptosmite" payload.
 
-Downgrading and unenrollment has been patched by Google™️.
+### R111 patch ("The Fog")
+> [!NOTE]
+> It is recommended to use CryptoSmite instead if you're only affected by "_The Fog_" and nothing else.
+> "_The Fog_" instructions are old, however that doesn't mean you can't try it _**if**_ you don't wish to use CryptoSmite.
+
+Unenrollment via SH1MMER has been patched by Google on Cr50/Ti50 devices.
 If your Chromebook has never updated to version 112 (or newer) before (check in `chrome://version`),
 then you can ignore this and follow the normal instructions. If not, unenrollment will not work as normal.
 
@@ -136,9 +138,13 @@ This will bypass both issues of The Fog and The Tsunami, however further caveats
 
 </details>
 
-### The Tsunami
+### R114 patch ("The Tsunami")
 
-Disabling write protection has also been patched by Google™️.
+> [!WARNING]
+> It is **_STRONGLY_** recommended to use CryptoSmite instead if you're on v119 or lower.
+> The instructions to bypass "_The Tsunami_" are potentially dangerous, even with a chip flasher. **Proceed with caution if you can't use CryptoSmite.**
+
+Disabling write protection has also been patched by Google on Cr50/Ti50 devices.
 If your Chromebook has never updated to version 114 (or newer) before (check in `chrome://version`),
 then you can ignore this and follow the [Unpatch](https://sh1mmer.me/#fog:~:text=v111) instructions. If not, disabling 
 write protection will not work as normal.
@@ -146,8 +152,10 @@ write protection will not work as normal.
 <details>
 <summary>Tsunami Bypass Details</summary>
 
-If your Chromebook is below ChromeOS version 120, unenrollment is still possible by using [cryptosmite](https://github.com/FWSmasher/CryptoSmite).
-Cryptosmite is now included as an extra payload for all shims.
+If your Chromebook is on version 114 or newer,
+unenrollment is still possible by [bridging two pins on the firmware chip](https://blog.darkn.bio/blog/the-tsunami#bypassing-instructions).
+On most devices, this will require you to take off the back of the Chromebook and then use a piece of tinfoil, wire, or other conductive material to bridge the two pins.
+This bypass is **not recommended** as you risk permanently bricking the Chromebook, please use [E-Halcyon](https://fog.gay) instead.
 
 </details>
 

@@ -15,7 +15,7 @@ check_deps() {
 	done
 }
 
-missing_deps=$(check_deps sfdisk futility binwalk lz4 file)
+missing_deps=$(check_deps sfdisk futility binwalk lz4 zcat file cpio)
 [ "$missing_deps" ] && fail "The following required commands weren't found in PATH:\n${missing_deps}"
 
 cleanup() {
@@ -28,24 +28,58 @@ is_linux_kernel() {
 	file -b "$1" | grep -q "^Linux kernel"
 }
 
+binwalk_grep() {
+	local err fifo binwalk_pid bin_line
+	err=0
+	fifo=$(mktemp -u)
+	mkfifo "$fifo"
+	binwalk "$1" >"$fifo" &
+	binwalk_pid="$!"
+	bin_line=$(grep -m 1 "$2" "$fifo")
+	if [ -z "$bin_line" ]; then
+		err=1
+	else
+		kill "$binwalk_pid"
+		echo "$bin_line"
+	fi
+	rm "$fifo"
+	return "$err"
+}
+
 check_kern() {
-	local binwalk_pid lz4_offset cpio_root
+	local bin_line bin_offset cpio_root check_file mount_file
 	echo "$1"
 	echo "Extracting kernel"
 	futility vbutil_kernel --get-vmlinuz "$1" --vmlinuz-out "$WORKDIR"/vmlinuz
-	# did we actually get the vmlinuz? if not, it's probably an arm kernel (extra steps)
+	# did we actually get the vmlinuz?
 	if ! is_linux_kernel "$WORKDIR"/vmlinuz; then
-		mkfifo "$WORKDIR"/binwalk_out
-		binwalk "$1" >"$WORKDIR"/binwalk_out &
-		binwalk_pid="$!"
-		lz4_offset=$(grep -m 1 "LZ4 compressed data" "$WORKDIR"/binwalk_out | awk '{print $1}')
-		kill "$binwalk_pid"
-		rm "$WORKDIR"/binwalk_out "$WORKDIR"/vmlinuz
-		dd if="$1" bs=4096 iflag=skip_bytes,count_bytes skip="${lz4_offset:-0}" | lz4 -q -d - "$WORKDIR"/vmlinuz || :
-	fi
-	if ! is_linux_kernel "$WORKDIR"/vmlinuz; then
-		echo "Could not extract linux kernel from KERN blob."
-		return 2
+		rm "$WORKDIR"/vmlinuz
+		if ! bin_line=$(binwalk_grep "$1" "\(Linux kernel\|LZ4 compressed data\|gzip compressed data\)"); then
+			echo "Could not extract linux kernel from KERN blob."
+			return 2
+		fi
+		bin_offset=$(echo "$bin_line" | awk '{print $1}')
+		dd if="$1" of="$WORKDIR"/bin bs=4MiB iflag=skip_bytes skip="${bin_offset:-0}" 2>/dev/null
+		case "$bin_line" in
+			*"Linux kernel"*) mv "$WORKDIR"/bin "$WORKDIR"/vmlinuz ;; # there will be trailing garbage data
+			*"LZ4 compressed data"*)
+				lz4 -q -d "$WORKDIR"/bin "$WORKDIR"/vmlinuz || :
+				if ! is_linux_kernel "$WORKDIR"/vmlinuz; then
+					echo "Could not extract linux kernel from KERN blob."
+					return 2
+				fi
+				;;
+			*"gzip compressed data"*)
+				zcat -q "$WORKDIR"/bin >"$WORKDIR"/bin2 || :
+				if ! bin_line=$(binwalk_grep "$WORKDIR"/bin2 "Linux kernel"); then
+					echo "Could not extract linux kernel from KERN blob."
+					return 2
+				fi
+				bin_offset=$(echo "$bin_line" | awk '{print $1}')
+				# there will be trailing garbage data
+				dd if="$WORKDIR"/bin2 of="$WORKDIR"/vmlinuz bs=4MiB iflag=skip_bytes skip="${bin_offset:-0}" 2>/dev/null
+				;;
+		esac
 	fi
 	echo "Extracting initramfs"
 	mkdir "$WORKDIR"/extract
@@ -56,18 +90,34 @@ check_kern() {
 		echo "Could not extract initramfs."
 		return 2
 	fi
-	if ! [ -f "$cpio_root"/bin/bootstrap.sh ]; then
+	for f in $(find "$cpio_root"/../.. -maxdepth 1 -type f); do
+		if file -b "$f" | grep -qw "cpio"; then
+			(cd "$WORKDIR"; cpio -im lib <"$f" 2>/dev/null)
+			echo -n "Initramfs date: "
+			date -ur "$WORKDIR"/lib
+			rm -rf "$WORKDIR"/lib
+			break
+		fi
+	done
+	if [ -f "$cpio_root"/bin/bootstrap.sh ]; then
+		check_file=/bin/bootstrap.sh
+		mount_file=/bin/bootstrap.sh
+	else
+		check_file=/lib/factory_init.sh
+		mount_file=/init
+	fi
+	if ! [ -f "$cpio_root$mount_file" ]; then
 		echo "Missing /bin/bootstrap.sh, cannot determine patch."
 		return 2
 	fi
-	if grep -q "block_devmode" "$cpio_root"/bin/bootstrap.sh; then
+	if grep -q "block_devmode" "$cpio_root$check_file"; then
 		echo "WARNING: initramfs appears to check block_devmode in crossystem."
-		echo "Disable WP to bypass, or hope that crossystem is broken (e.g. hana)"
+		echo "Disable WP to bypass, or hope that crossystem is broken (hana/elm)"
 	fi
-	if grep -q "Mounting usb..." "$cpio_root"/bin/bootstrap.sh; then
+	if grep -q "Mounting usb" "$cpio_root$mount_file"; then
 		echo "Not patched!"
 		return 0
-	elif grep -q "Mounting rootfs..." "$cpio_root"/bin/bootstrap.sh; then
+	elif grep -q "Mounting rootfs..." "$cpio_root$mount_file"; then
 		echo "Patched (forced rootfs verification)"
 		return 1
 	else

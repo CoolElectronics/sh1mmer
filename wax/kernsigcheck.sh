@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
+SCRIPT_DIR=$(dirname "$0")
+SCRIPT_DIR=${SCRIPT_DIR:-"."}
 
 set -eE
 
-KEYFILE=lib/mp-reco-2024-05-03.txt
+KEYFILE="$SCRIPT_DIR"/lib/mp-reco-2024-05-03.txt
 
 fail() {
 	printf "%s\n" "$*" >&2
@@ -51,7 +53,7 @@ check_kern() {
 			echo "Verified by key: $name $type v$ver"
 			echo "Will boot on firmware with gbb.recovery_key: $fsum"
 			if [ "$name" = developer ]; then
-				echo "WARNING: Developer key detected. CTRL+U boot only."
+				echo "WARNING: Developer key detected. CTRL+U boot only on production firmware."
 			fi
 			break
 		fi
